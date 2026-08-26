@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as BriefingRouteImport } from './routes/briefing'
 import { Route as BriefsRouteImport } from './routes/briefs'
 import { Route as CommsRouteImport } from './routes/comms'
+import { Route as DailyRouteImport } from './routes/daily'
 import { Route as PlannerRouteImport } from './routes/planner'
 
 const IndexRoute = IndexRouteImport.update({
@@ -35,6 +36,11 @@ const CommsRoute = CommsRouteImport.update({
   path: '/comms',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DailyRoute = DailyRouteImport.update({
+  id: '/daily',
+  path: '/daily',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PlannerRoute = PlannerRouteImport.update({
   id: '/planner',
   path: '/planner',
@@ -46,6 +52,7 @@ export interface FileRoutesByFullPath {
   '/briefing': typeof BriefingRoute
   '/briefs': typeof BriefsRoute
   '/comms': typeof CommsRoute
+  '/daily': typeof DailyRoute
   '/planner': typeof PlannerRoute
 }
 export interface FileRoutesByTo {
@@ -53,6 +60,7 @@ export interface FileRoutesByTo {
   '/briefing': typeof BriefingRoute
   '/briefs': typeof BriefsRoute
   '/comms': typeof CommsRoute
+  '/daily': typeof DailyRoute
   '/planner': typeof PlannerRoute
 }
 export interface FileRoutesById {
@@ -61,14 +69,22 @@ export interface FileRoutesById {
   '/briefing': typeof BriefingRoute
   '/briefs': typeof BriefsRoute
   '/comms': typeof CommsRoute
+  '/daily': typeof DailyRoute
   '/planner': typeof PlannerRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/briefing' | '/briefs' | '/comms' | '/planner'
+  fullPaths: '/' | '/briefing' | '/briefs' | '/comms' | '/daily' | '/planner'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/briefing' | '/briefs' | '/comms' | '/planner'
-  id: '__root__' | '/' | '/briefing' | '/briefs' | '/comms' | '/planner'
+  to: '/' | '/briefing' | '/briefs' | '/comms' | '/daily' | '/planner'
+  id:
+    | '__root__'
+    | '/'
+    | '/briefing'
+    | '/briefs'
+    | '/comms'
+    | '/daily'
+    | '/planner'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -76,6 +92,7 @@ export interface RootRouteChildren {
   BriefingRoute: typeof BriefingRoute
   BriefsRoute: typeof BriefsRoute
   CommsRoute: typeof CommsRoute
+  DailyRoute: typeof DailyRoute
   PlannerRoute: typeof PlannerRoute
 }
 
@@ -109,6 +126,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CommsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/daily': {
+      id: '/daily'
+      path: '/daily'
+      fullPath: '/daily'
+      preLoaderRoute: typeof DailyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/planner': {
       id: '/planner'
       path: '/planner'
@@ -124,6 +148,7 @@ const rootRouteChildren: RootRouteChildren = {
   BriefingRoute: BriefingRoute,
   BriefsRoute: BriefsRoute,
   CommsRoute: CommsRoute,
+  DailyRoute: DailyRoute,
   PlannerRoute: PlannerRoute,
 }
 export const routeTree = rootRouteImport
