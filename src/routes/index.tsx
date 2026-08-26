@@ -5,6 +5,7 @@ import {
   CalendarClock,
   FileCheck2,
   Globe2,
+  Newspaper,
   NotebookPen,
   Send,
 } from "lucide-react";
@@ -62,6 +63,14 @@ const stats = [
 ];
 
 const modules = [
+  {
+    title: "Executive Daily Brief",
+    description:
+      "Synthesize context, meetings, and market intel into a one-page morning brief with priorities and a proposed schedule.",
+    url: "/daily",
+    icon: Newspaper,
+    tag: "Morning Command Brief",
+  },
   {
     title: "Stakeholder Comms",
     description:

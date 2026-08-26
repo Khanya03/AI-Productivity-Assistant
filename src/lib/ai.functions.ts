@@ -2,9 +2,11 @@ import { createServerFn } from "@tanstack/react-start";
 import {
   briefInputSchema,
   briefingInputSchema,
+  dailyBriefInputSchema,
   emailInputSchema,
   plannerInputSchema,
   runBriefingGeneration,
+  runDailyBriefGeneration,
   runEmailGeneration,
   runMarketBriefGeneration,
   runPlanGeneration,
@@ -32,4 +34,10 @@ export const generateMarketBrief = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => briefInputSchema.parse(input))
   .handler(async ({ data }) =>
     runMarketBriefGeneration(data, process.env["LOVABLE_API_KEY"]),
+  );
+
+export const generateDailyBrief = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => dailyBriefInputSchema.parse(input))
+  .handler(async ({ data }) =>
+    runDailyBriefGeneration(data, process.env["LOVABLE_API_KEY"]),
   );

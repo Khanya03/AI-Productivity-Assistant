@@ -7,6 +7,8 @@ import {
   type ActionItem,
   type AiResult,
   type BriefingResult,
+  type DailyBrief,
+  type DailyBriefInput,
   type ExecEmail,
   type MarketBrief,
   type PlanResult,
@@ -40,10 +42,21 @@ export const briefInputSchema = z.object({
   topic: z.string().trim().min(5, "Enter a topic or paste an article first.").max(15000),
 });
 
+export const dailyBriefInputSchema = z.object({
+  context: z
+    .string()
+    .trim()
+    .min(20, "Add some context about today's priorities and recent notes.")
+    .max(8000),
+  meetings: z.string().max(8000).optional().default(""),
+  market: z.string().max(8000).optional().default(""),
+});
+
 export type EmailInput = z.infer<typeof emailInputSchema>;
 export type BriefingInput = z.infer<typeof briefingInputSchema>;
 export type PlannerInput = z.infer<typeof plannerInputSchema>;
 export type BriefInput = z.infer<typeof briefInputSchema>;
+export type DailyBriefInput = z.infer<typeof dailyBriefInputSchema>;
 
 // ---------- Output schemas ----------
 
@@ -93,6 +106,50 @@ const briefOutputSchema = z.object({
     .describe("Exactly 3 executive TL;DR bullets"),
   insights: z.array(z.string()).describe("Key strategic insights"),
   takeaways: z.array(z.string()).describe("Recommended actionable takeaways"),
+});
+
+const dailyBriefOutputSchema = z.object({
+  headline: z
+    .string()
+    .describe("A crisp, executive one-line headline for the day's brief"),
+  topPriorities: z
+    .array(
+      z.object({
+        rank: z.number().describe("Priority rank 1-3"),
+        task: z.string().describe("The priority in one clear sentence"),
+        why: z.string().describe("Why it matters today"),
+      }),
+    )
+    .length(3)
+    .describe("Exactly 3 ranked priorities for today"),
+  decisionsPending: z
+    .array(z.string())
+    .describe("Decisions that need an answer today"),
+  stakeholderUpdates: z
+    .array(
+      z.object({
+        audience: z.string().describe("Who needs the update"),
+        message: z.string().describe("One-sentence update or ask"),
+        urgency: z.enum(["High", "Medium", "Low"]),
+      }),
+    )
+    .describe("Stakeholder updates to send today"),
+  marketSnapshot: z
+    .array(z.string())
+    .describe("2-4 market or competitive intelligence bullets"),
+  scheduleBlocks: z
+    .array(
+      z.object({
+        start: z.string().describe("Start time, e.g. 09:00"),
+        end: z.string().describe("End time, e.g. 10:30"),
+        title: z.string(),
+        note: z.string().describe("Why this block matters"),
+      }),
+    )
+    .describe("Proposed time blocks for today"),
+  closingNote: z
+    .string()
+    .describe("Short motivational or strategic closing thought"),
 });
 
 // ---------- Helpers ----------
@@ -262,6 +319,39 @@ export async function runMarketBriefGeneration(
         "If the input is article text, analyze it; if it is a topic, brief on the current landscape. " +
         "The TL;DR must contain exactly 3 bullets.",
       prompt: `Topic / article text / report request:\n${input.topic}`,
+    });
+    return { data: output, source: "ai" };
+  } catch (err) {
+    throw toFriendlyError(err);
+  }
+}
+
+export async function runDailyBriefGeneration(
+  input: DailyBriefInput,
+  apiKey?: string,
+): Promise<AiResult<DailyBrief>> {
+  if (!apiKey) return { data: mockDailyBrief(input), source: "mock" };
+  try {
+    const gateway = createLovableAiGatewayProvider(apiKey);
+    const output = await generateStructured<DailyBrief>({
+      model: gateway(MODEL),
+      schema: dailyBriefOutputSchema,
+      shape:
+        '{"headline": string, "topPriorities": [{"rank": number, "task": string, "why": string}], "decisionsPending": string[], "stakeholderUpdates": [{"audience": string, "message": string, "urgency": "High"|"Medium"|"Low"}], "marketSnapshot": string[], "scheduleBlocks": [{"start": string, "end": string, "title": string, "note": string}], "closingNote": string}',
+      system:
+        "You are ExecPulse AI, a chief-of-staff preparing the CEO's morning brief. " +
+        "Synthesize scattered context into a single, decision-focused daily briefing. " +
+        "Be concise, specific, and action-oriented. Do not invent financial figures. " +
+        "Return exactly 3 ranked priorities and 2-4 market bullets.",
+      prompt:
+        `EXECUTIVE CONTEXT & PRIORITIES:\n${input.context}\n\n` +
+        (input.meetings.trim()
+          ? `UPCOMING MEETINGS / RECENT NOTES:\n${input.meetings}\n\n`
+          : "") +
+        (input.market.trim()
+          ? `MARKET & COMPETITIVE INTELLIGENCE:\n${input.market}\n\n`
+          : "") +
+        "Draft the CEO's daily brief using the schema above.",
     });
     return { data: output, source: "ai" };
   } catch (err) {

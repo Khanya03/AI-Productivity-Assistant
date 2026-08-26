@@ -64,6 +64,35 @@ export interface MarketBrief {
   takeaways: string[];
 }
 
+export interface DailyPriority {
+  rank: number;
+  task: string;
+  why: string;
+}
+
+export interface StakeholderUpdate {
+  audience: string;
+  message: string;
+  urgency: "High" | "Medium" | "Low";
+}
+
+export interface DailyBriefBlock {
+  start: string;
+  end: string;
+  title: string;
+  note: string;
+}
+
+export interface DailyBrief {
+  headline: string;
+  topPriorities: DailyPriority[];
+  decisionsPending: string[];
+  stakeholderUpdates: StakeholderUpdate[];
+  marketSnapshot: string[];
+  scheduleBlocks: DailyBriefBlock[];
+  closingNote: string;
+}
+
 export type AiSource = "ai" | "mock";
 
 export interface AiResult<T> {

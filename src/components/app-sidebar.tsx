@@ -4,6 +4,7 @@ import {
   CalendarClock,
   Globe2,
   LayoutDashboard,
+  Newspaper,
   NotebookPen,
   Send,
 } from "lucide-react";
@@ -24,6 +25,7 @@ import {
 
 const items = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
+  { title: "Executive Daily Brief", url: "/daily", icon: Newspaper },
   { title: "Stakeholder Comms", url: "/comms", icon: Send },
   { title: "Executive Briefing", url: "/briefing", icon: NotebookPen },
   { title: "Strategic Planner", url: "/planner", icon: CalendarClock },
