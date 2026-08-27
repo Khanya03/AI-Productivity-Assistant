@@ -4,12 +4,16 @@ import {
   briefingInputSchema,
   dailyBriefInputSchema,
   emailInputSchema,
+  guardrailsInputSchema,
   plannerInputSchema,
   runBriefingGeneration,
   runDailyBriefGeneration,
   runEmailGeneration,
   runMarketBriefGeneration,
+  runGuardrailsGeneration,
   runPlanGeneration,
+  runStakeholderGeneration,
+  stakeholderInputSchema,
 } from "./ai.server";
 
 export const generateExecEmail = createServerFn({ method: "POST" })
@@ -40,4 +44,16 @@ export const generateDailyBrief = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => dailyBriefInputSchema.parse(input))
   .handler(async ({ data }) =>
     runDailyBriefGeneration(data, process.env["LOVABLE_API_KEY"]),
+  );
+
+export const generateGuardrails = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => guardrailsInputSchema.parse(input))
+  .handler(async ({ data }) =>
+    runGuardrailsGeneration(data, process.env["LOVABLE_API_KEY"]),
+  );
+
+export const generateStakeholderInsight = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => stakeholderInputSchema.parse(input))
+  .handler(async ({ data }) =>
+    runStakeholderGeneration(data, process.env["LOVABLE_API_KEY"]),
   );
