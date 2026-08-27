@@ -99,3 +99,55 @@ export interface AiResult<T> {
   data: T;
   source: AiSource;
 }
+
+// ---------- Executive Calendar Guardrails ----------
+
+export type GuardrailSeverity = "critical" | "warning" | "healthy";
+
+export interface GuardrailFinding {
+  title: string;
+  detail: string;
+  severity: GuardrailSeverity;
+}
+
+export type GuardrailBlockKind = "focus" | "prep" | "buffer" | "recovery";
+
+export interface GuardrailBlock {
+  start: string;
+  end: string;
+  title: string;
+  kind: GuardrailBlockKind;
+  reason: string;
+}
+
+export interface CalendarGuardrails {
+  healthScore: number;
+  healthVerdict: string;
+  findings: GuardrailFinding[];
+  protectedBlocks: GuardrailBlock[];
+  recommendations: string[];
+}
+
+// ---------- Stakeholder Sentiment & Follow-ups ----------
+
+export type FollowUpTone = "warm" | "urgent" | "board-update" | "reconnect";
+
+export const FOLLOWUP_TONE_LABELS: Record<FollowUpTone, string> = {
+  warm: "Warm check-in",
+  urgent: "Urgent nudge",
+  "board-update": "Board-style update",
+  reconnect: "Re-engage a cold relationship",
+};
+
+export type SentimentLabel = "Positive" | "Neutral" | "At Risk";
+
+export interface StakeholderInsight {
+  sentiment: SentimentLabel;
+  sentimentScore: number;
+  summary: string;
+  positiveSignals: string[];
+  riskSignals: string[];
+  recommendedTiming: string;
+  talkingPoints: string[];
+  followUpEmail: ExecEmail;
+}

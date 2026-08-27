@@ -553,3 +553,246 @@ function mockDailyBrief(input: DailyBriefInput): DailyBrief {
       "Momentum comes from finishing the first priority before noon — everything else follows.",
   };
 }
+
+// ================= Executive Calendar Guardrails =================
+
+import {
+  FOLLOWUP_TONE_LABELS,
+  type CalendarGuardrails,
+  type StakeholderInsight,
+} from "./exec-types";
+
+export const guardrailsInputSchema = z.object({
+  schedule: z
+    .string()
+    .trim()
+    .min(15, "Paste your calendar or list your meetings first.")
+    .max(10000),
+  priorities: z.string().max(4000).optional().default(""),
+  window: z.enum(["today", "week"]),
+});
+export type GuardrailsInput = z.infer<typeof guardrailsInputSchema>;
+
+const guardrailsOutputSchema = z.object({
+  healthScore: z.number().min(0).max(100),
+  healthVerdict: z.string(),
+  findings: z.array(
+    z.object({
+      title: z.string(),
+      detail: z.string(),
+      severity: z.enum(["critical", "warning", "healthy"]),
+    }),
+  ),
+  protectedBlocks: z.array(
+    z.object({
+      start: z.string(),
+      end: z.string(),
+      title: z.string(),
+      kind: z.enum(["focus", "prep", "buffer", "recovery"]),
+      reason: z.string(),
+    }),
+  ),
+  recommendations: z.array(z.string()),
+});
+
+export const stakeholderInputSchema = z.object({
+  name: z.string().trim().min(2, "Add the stakeholder's name.").max(120),
+  role: z.string().max(160).optional().default(""),
+  lastContact: z.string().max(60).optional().default(""),
+  notes: z
+    .string()
+    .trim()
+    .min(20, "Paste the interaction history or recent notes.")
+    .max(10000),
+  tone: z.enum(["warm", "urgent", "board-update", "reconnect"]),
+});
+export type StakeholderInput = z.infer<typeof stakeholderInputSchema>;
+
+const stakeholderOutputSchema = z.object({
+  sentiment: z.enum(["Positive", "Neutral", "At Risk"]),
+  sentimentScore: z.number().min(0).max(100),
+  summary: z.string(),
+  positiveSignals: z.array(z.string()),
+  riskSignals: z.array(z.string()),
+  recommendedTiming: z.string(),
+  talkingPoints: z.array(z.string()),
+  followUpEmail: z.object({ subject: z.string(), body: z.string() }),
+});
+
+export async function runGuardrailsGeneration(
+  input: GuardrailsInput,
+  apiKey?: string,
+): Promise<AiResult<CalendarGuardrails>> {
+  if (!apiKey) return { data: mockGuardrails(input), source: "mock" };
+  try {
+    const gateway = createLovableAiGatewayProvider(apiKey);
+    const output = await generateStructured<CalendarGuardrails>({
+      model: gateway(MODEL),
+      schema: guardrailsOutputSchema,
+      shape:
+        '{"healthScore": number, "healthVerdict": string, "findings": [{"title": string, "detail": string, "severity": "critical"|"warning"|"healthy"}], "protectedBlocks": [{"start": string, "end": string, "title": string, "kind": "focus"|"prep"|"buffer"|"recovery", "reason": string}], "recommendations": string[]}',
+      system:
+        "You are ExecPulse AI, a chief-of-staff auditing a CEO's calendar. " +
+        "Detect back-to-back meeting chains, missing prep time before high-stakes sessions, " +
+        "meeting overload, fragmented focus time, and missing recovery buffers. " +
+        "healthScore is 0-100 (100 = perfectly protected). Give 3-6 findings, " +
+        "3-6 protected blocks that fit in real gaps, and 3-5 crisp recommendations. " +
+        "Never invent meetings that were not provided.",
+      prompt:
+        `PLANNING WINDOW: ${input.window === "today" ? "Today" : "This week"}\n\n` +
+        `CALENDAR / MEETINGS:\n${input.schedule}\n\n` +
+        (input.priorities.trim()
+          ? `STRATEGIC PRIORITIES TO PROTECT:\n${input.priorities}\n\n`
+          : "") +
+        "Audit this calendar and return the guardrails using the schema above.",
+    });
+    return { data: output, source: "ai" };
+  } catch (err) {
+    throw toFriendlyError(err);
+  }
+}
+
+export async function runStakeholderGeneration(
+  input: StakeholderInput,
+  apiKey?: string,
+): Promise<AiResult<StakeholderInsight>> {
+  if (!apiKey) return { data: mockStakeholder(input), source: "mock" };
+  try {
+    const gateway = createLovableAiGatewayProvider(apiKey);
+    const output = await generateStructured<StakeholderInsight>({
+      model: gateway(MODEL),
+      schema: stakeholderOutputSchema,
+      shape:
+        '{"sentiment": "Positive"|"Neutral"|"At Risk", "sentimentScore": number, "summary": string, "positiveSignals": string[], "riskSignals": string[], "recommendedTiming": string, "talkingPoints": string[], "followUpEmail": {"subject": string, "body": string}}',
+      system:
+        "You are ExecPulse AI, a relationship strategist for a Fortune-500 CEO. " +
+        "Read the interaction history, judge the relationship's sentiment honestly, " +
+        "and draft a follow-up email in the requested tone. sentimentScore is 0-100 " +
+        "(100 = strongly positive). Be specific and evidence-based; never invent " +
+        "financial figures or commitments. Sign the email as 'The Executive Office'.",
+      prompt:
+        `STAKEHOLDER: ${input.name}${input.role ? ` — ${input.role}` : ""}\n` +
+        (input.lastContact ? `LAST CONTACT: ${input.lastContact}\n` : "") +
+        `FOLLOW-UP TONE: ${FOLLOWUP_TONE_LABELS[input.tone]}\n\n` +
+        `INTERACTION HISTORY / NOTES:\n${input.notes}\n\n` +
+        "Analyze the relationship and draft the follow-up using the schema above.",
+    });
+    return { data: output, source: "ai" };
+  } catch (err) {
+    throw toFriendlyError(err);
+  }
+}
+
+function mockGuardrails(input: GuardrailsInput): CalendarGuardrails {
+  const lines = input.schedule
+    .split("\n")
+    .map((l) => l.trim().replace(/^[-*•\d.\s]+/, ""))
+    .filter((l) => l.length > 2);
+  const first = lines[0] ?? "your first meeting";
+  const busiest = lines[1] ?? "your leadership review";
+  const week = input.window === "week";
+  return {
+    healthScore: 62,
+    healthVerdict:
+      "Your calendar is meeting-heavy with limited protected thinking time. Two structural fixes recover roughly three hours of strategic capacity.",
+    findings: [
+      {
+        title: "Back-to-back chain detected",
+        detail: `“${first}” runs straight into the next session with no reset time. Decision quality drops measurably after the second consecutive meeting.`,
+        severity: "critical",
+      },
+      {
+        title: "No prep time before a high-stakes session",
+        detail: `“${busiest.slice(0, 70)}” has no dedicated preparation window ahead of it. Book 30 minutes so you walk in with a position, not a reaction.`,
+        severity: "critical",
+      },
+      {
+        title: "Focus time is fragmented",
+        detail: `Your open time appears in blocks shorter than 45 minutes${week ? " across most days" : ""}, which is below the threshold for meaningful strategic work.`,
+        severity: "warning",
+      },
+      {
+        title: "Recovery buffers are healthy late in the day",
+        detail: "The end of your schedule leaves room to capture follow-ups and close the loop on decisions.",
+        severity: "healthy",
+      },
+    ],
+    protectedBlocks: week
+      ? [
+          { start: "Mon 08:30", end: "Mon 10:30", title: "Protected strategic focus", kind: "focus", reason: "Front-load the week's highest-leverage work while energy is highest." },
+          { start: "Tue 09:30", end: "Tue 10:00", title: "Prep: leadership review", kind: "prep", reason: "Arrive with a written position and the two decisions you need." },
+          { start: "Wed 12:00", end: "Wed 12:30", title: "Reset buffer", kind: "buffer", reason: "Breaks the mid-week back-to-back chain." },
+          { start: "Fri 15:00", end: "Fri 16:00", title: "Week close & recovery", kind: "recovery", reason: "Capture follow-ups and set next week's top three." },
+        ]
+      : [
+          { start: "08:30", end: "10:00", title: "Protected strategic focus", kind: "focus", reason: "Your only uninterrupted window — reserve it for the highest-stakes decision." },
+          { start: "10:30", end: "11:00", title: `Prep: ${busiest.slice(0, 40)}`, kind: "prep", reason: "Thirty minutes of preparation before a high-stakes session." },
+          { start: "13:00", end: "13:15", title: "Reset buffer", kind: "buffer", reason: "Breaks the back-to-back chain after lunch." },
+          { start: "16:30", end: "17:00", title: "Day close & recovery", kind: "recovery", reason: "Capture actions and hand off follow-ups before logging off." },
+        ],
+    recommendations: [
+      "Cap consecutive meetings at two, then enforce a 15-minute reset.",
+      "Attach a 30-minute prep block to every board-, investor-, or press-facing session.",
+      "Declare one recurring no-meeting focus window and defend it publicly.",
+      "Delegate or decline any session where you are not the decision-maker.",
+    ],
+  };
+}
+
+function mockStakeholder(input: StakeholderInput): StakeholderInsight {
+  const theme = firstLine(input.notes, "the current engagement");
+  const atRisk = input.tone === "urgent" || input.tone === "reconnect";
+  const subjects: Record<string, string> = {
+    warm: `Checking in — ${theme.slice(0, 50)}`,
+    urgent: `Time-sensitive: ${theme.slice(0, 50)}`,
+    "board-update": `Executive update — ${theme.slice(0, 50)}`,
+    reconnect: `Reconnecting on ${theme.slice(0, 50)}`,
+  };
+  return {
+    sentiment: atRisk ? "At Risk" : "Positive",
+    sentimentScore: atRisk ? 38 : 74,
+    summary: atRisk
+      ? `The relationship with ${input.name} has cooled. Engagement signals are weakening around ${theme.slice(0, 60)}, and the gap since your last substantive exchange is now the primary risk. A direct, high-value touchpoint from you personally is warranted this week.`
+      : `The relationship with ${input.name} is constructive and forward-leaning. Momentum around ${theme.slice(0, 60)} is intact, and the main opportunity is to convert goodwill into a concrete next commitment.`,
+    positiveSignals: atRisk
+      ? [
+          "Historic goodwill remains — earlier exchanges were substantive and candid.",
+          "No explicit objection has been raised; the issue is attention, not alignment.",
+        ]
+      : [
+          "Responses are timely and substantive, indicating genuine investment.",
+          "They have voluntarily surfaced ideas and introductions.",
+          "Tone in recent exchanges is collaborative rather than transactional.",
+        ],
+    riskSignals: atRisk
+      ? [
+          `Time since last meaningful contact${input.lastContact ? ` (${input.lastContact})` : ""} exceeds the healthy cadence for this relationship tier.`,
+          "Recent replies are shorter and delegated rather than personal.",
+          "No forward commitment is currently on the calendar.",
+        ]
+      : [
+          "No date is set for the next touchpoint — momentum can quietly lapse.",
+          "One open question from the last exchange remains unanswered.",
+        ],
+    recommendedTiming: atRisk
+      ? "Send within 24 hours, and propose two specific times in the next 10 days."
+      : "Send within the next 3 business days while the last conversation is still current.",
+    talkingPoints: [
+      `Acknowledge ${theme.slice(0, 60)} directly and where it now stands.`,
+      "Lead with what changed since the last exchange, not with an apology.",
+      "Offer one concrete piece of value: data, an introduction, or early access.",
+      "Close with a specific ask and two proposed times.",
+    ],
+    followUpEmail: {
+      subject: subjects[input.tone] ?? `Following up — ${theme.slice(0, 50)}`,
+      body:
+        `Dear ${input.name},\n\n` +
+        (atRisk
+          ? `It has been longer than I would like since we last spoke properly, and I did not want more time to pass without reaching out directly.\n\n`
+          : `Thank you again for the last conversation — it sharpened our thinking considerably.\n\n`) +
+        `Since then, our work on ${theme.slice(0, 70)} has moved forward, and I think there is a natural next step worth discussing with you specifically.\n\n` +
+        `Would either of the next two weeks work for a short conversation? I am happy to work around your schedule, and my office can send options immediately.\n\n` +
+        `With appreciation,\nThe Executive Office`,
+    },
+  };
+}
