@@ -14,6 +14,7 @@ import { Route as BriefingRouteImport } from './routes/briefing'
 import { Route as BriefsRouteImport } from './routes/briefs'
 import { Route as CommsRouteImport } from './routes/comms'
 import { Route as DailyRouteImport } from './routes/daily'
+import { Route as GuardrailsRouteImport } from './routes/guardrails'
 import { Route as PlannerRouteImport } from './routes/planner'
 
 const IndexRoute = IndexRouteImport.update({
@@ -41,6 +42,11 @@ const DailyRoute = DailyRouteImport.update({
   path: '/daily',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GuardrailsRoute = GuardrailsRouteImport.update({
+  id: '/guardrails',
+  path: '/guardrails',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PlannerRoute = PlannerRouteImport.update({
   id: '/planner',
   path: '/planner',
@@ -53,6 +59,7 @@ export interface FileRoutesByFullPath {
   '/briefs': typeof BriefsRoute
   '/comms': typeof CommsRoute
   '/daily': typeof DailyRoute
+  '/guardrails': typeof GuardrailsRoute
   '/planner': typeof PlannerRoute
 }
 export interface FileRoutesByTo {
@@ -61,6 +68,7 @@ export interface FileRoutesByTo {
   '/briefs': typeof BriefsRoute
   '/comms': typeof CommsRoute
   '/daily': typeof DailyRoute
+  '/guardrails': typeof GuardrailsRoute
   '/planner': typeof PlannerRoute
 }
 export interface FileRoutesById {
@@ -70,13 +78,28 @@ export interface FileRoutesById {
   '/briefs': typeof BriefsRoute
   '/comms': typeof CommsRoute
   '/daily': typeof DailyRoute
+  '/guardrails': typeof GuardrailsRoute
   '/planner': typeof PlannerRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/briefing' | '/briefs' | '/comms' | '/daily' | '/planner'
+  fullPaths:
+    | '/'
+    | '/briefing'
+    | '/briefs'
+    | '/comms'
+    | '/daily'
+    | '/guardrails'
+    | '/planner'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/briefing' | '/briefs' | '/comms' | '/daily' | '/planner'
+  to:
+    | '/'
+    | '/briefing'
+    | '/briefs'
+    | '/comms'
+    | '/daily'
+    | '/guardrails'
+    | '/planner'
   id:
     | '__root__'
     | '/'
@@ -84,6 +107,7 @@ export interface FileRouteTypes {
     | '/briefs'
     | '/comms'
     | '/daily'
+    | '/guardrails'
     | '/planner'
   fileRoutesById: FileRoutesById
 }
@@ -93,6 +117,7 @@ export interface RootRouteChildren {
   BriefsRoute: typeof BriefsRoute
   CommsRoute: typeof CommsRoute
   DailyRoute: typeof DailyRoute
+  GuardrailsRoute: typeof GuardrailsRoute
   PlannerRoute: typeof PlannerRoute
 }
 
@@ -133,6 +158,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DailyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/guardrails': {
+      id: '/guardrails'
+      path: '/guardrails'
+      fullPath: '/guardrails'
+      preLoaderRoute: typeof GuardrailsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/planner': {
       id: '/planner'
       path: '/planner'
@@ -149,6 +181,7 @@ const rootRouteChildren: RootRouteChildren = {
   BriefsRoute: BriefsRoute,
   CommsRoute: CommsRoute,
   DailyRoute: DailyRoute,
+  GuardrailsRoute: GuardrailsRoute,
   PlannerRoute: PlannerRoute,
 }
 export const routeTree = rootRouteImport
