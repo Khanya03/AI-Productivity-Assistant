@@ -497,3 +497,59 @@ function mockMarketBrief(input: BriefInput): MarketBrief {
     ],
   };
 }
+
+function mockDailyBrief(input: DailyBriefInput): DailyBrief {
+  const theme = firstLine(input.context, "today's strategic priorities");
+  const marketTheme = input.market.trim()
+    ? firstLine(input.market, "the competitive landscape")
+    : "the competitive landscape";
+  return {
+    headline: `Today's focus: ${theme.slice(0, 70)}`,
+    topPriorities: [
+      {
+        rank: 1,
+        task: theme.slice(0, 90),
+        why: "Highest strategic leverage — it unblocks the rest of the week.",
+      },
+      {
+        rank: 2,
+        task: "Close the open decision on resourcing for the next quarter",
+        why: "Delays here compound into roadmap slippage.",
+      },
+      {
+        rank: 3,
+        task: "Align the leadership team on this week's external narrative",
+        why: "Consistency with stakeholders protects credibility.",
+      },
+    ],
+    decisionsPending: [
+      "Approve or defer the proposed budget reallocation",
+      "Confirm the timing of the stakeholder communication",
+    ],
+    stakeholderUpdates: [
+      {
+        audience: "Board",
+        message: "Short note confirming progress against the quarterly plan.",
+        urgency: "Medium",
+      },
+      {
+        audience: "Executive team",
+        message: "Reiterate the top three priorities and named owners.",
+        urgency: "High",
+      },
+    ],
+    marketSnapshot: [
+      `${marketTheme.slice(0, 80)} continues to consolidate around the top players.`,
+      "AI-led automation remains the primary differentiator buyers ask about.",
+      "Pricing pressure is expected to build over the next two quarters.",
+    ],
+    scheduleBlocks: [
+      { start: "08:30", end: "10:30", title: `Deep work: ${theme.slice(0, 50)}`, note: "Protect this block — no meetings." },
+      { start: "10:45", end: "12:00", title: "Decision meetings", note: "Batch approvals; end each with a named owner." },
+      { start: "13:00", end: "14:30", title: "Stakeholder touchpoints", note: "Board and partner updates." },
+      { start: "15:00", end: "16:00", title: "Review & delegate", note: "Approve, delegate, or delete." },
+    ],
+    closingNote:
+      "Momentum comes from finishing the first priority before noon — everything else follows.",
+  };
+}
