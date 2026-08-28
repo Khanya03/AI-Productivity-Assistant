@@ -3,10 +3,12 @@ import {
   Activity,
   CalendarClock,
   Globe2,
+  HeartHandshake,
   LayoutDashboard,
   Newspaper,
   NotebookPen,
   Send,
+  ShieldCheck,
 } from "lucide-react";
 
 import {
@@ -29,8 +31,15 @@ const items = [
   { title: "Stakeholder Comms", url: "/comms", icon: Send },
   { title: "Executive Briefing", url: "/briefing", icon: NotebookPen },
   { title: "Strategic Planner", url: "/planner", icon: CalendarClock },
+  { title: "Calendar Guardrails", url: "/guardrails", icon: ShieldCheck },
+  {
+    title: "Stakeholder Sentiment",
+    url: "/stakeholders",
+    icon: HeartHandshake,
+  },
   { title: "Market & Competitor Briefs", url: "/briefs", icon: Globe2 },
 ] as const;
+
 
 export function AppSidebar() {
   const { state, isMobile, setOpenMobile } = useSidebar();
