@@ -5,9 +5,11 @@ import {
   CalendarClock,
   FileCheck2,
   Globe2,
+  HeartHandshake,
   Newspaper,
   NotebookPen,
   Send,
+  ShieldCheck,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -96,6 +98,22 @@ const modules = [
     tag: "AI Task Scheduler",
   },
   {
+    title: "Calendar Guardrails",
+    description:
+      "Audit your calendar for back-to-back chains and missing prep time, then protect focus, buffer, and recovery blocks.",
+    url: "/guardrails",
+    icon: ShieldCheck,
+    tag: "Schedule Health Audit",
+  },
+  {
+    title: "Stakeholder Sentiment",
+    description:
+      "Read the temperature of a key relationship from your interaction history and get a tone-calibrated follow-up email.",
+    url: "/stakeholders",
+    icon: HeartHandshake,
+    tag: "Relationship Intelligence",
+  },
+  {
     title: "Market & Competitor Briefs",
     description:
       "Brief yourself on any topic or article: a 3-bullet TL;DR, strategic insights, and actionable takeaways.",
@@ -104,6 +122,7 @@ const modules = [
     tag: "AI Research Assistant",
   },
 ] as const;
+
 
 function Dashboard() {
   return (
